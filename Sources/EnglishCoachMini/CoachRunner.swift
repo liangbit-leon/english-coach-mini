@@ -165,7 +165,9 @@ final class CodexCoachProvider: CoachProviding {
         - express: explain the English information order, subject and verb choice, non-literal transformation, meaning boundaries, and reusable patterns.
         - improve: include original-sentence assessment, must-fix grammar, unnatural wording or collocation, English logic or order, and reusable patterns. Distinguish errors from acceptable but less natural wording.
         - understand: include a one-sentence meaning, logic spine, clause and modifier relationships, pronoun references when relevant, protected qualifiers, and key reusable structures.
-        - word: give the relevant word-family, register, collocations, and examples.
+        - word: use the structured wordStudy object for the main learning content, including American IPA, word or phrase parts, part of speech, meanings, word forms, tense patterns when relevant, collocations, bilingual examples, and usage notes. Do not invent verb tenses for a noun or phrase. Keep learningNotes as a short fallback summary.
+
+        For word mode, return an empty cards array and a wordStudy object; wordStudy is mandatory whenever the input is a single English word or short phrase. Use the exact input as entry. Set phoneticUS to an American English IPA transcription such as "/əˈrɛnt/". Set category to "word" or "phrase". Use empty arrays for sections that do not apply, but never omit the wordStudy object.
 
         Exact schema:
         <<<ENGLISH_COACH_APP_DATA>>>
@@ -201,6 +203,19 @@ final class CodexCoachProvider: CoachProviding {
               }
             }
           ],
+          "wordStudy": {
+            "entry": "errant",
+            "phoneticUS": "/əˈrɛnt/",
+            "category": "word",
+            "phraseParts": [],
+            "partOfSpeech": ["adjective — 偏离规范的"],
+            "meanings": ["偏离正常、规范或预期的"],
+            "wordForms": ["err — 犯错", "error — 错误"],
+            "tensePatterns": [],
+            "collocations": ["errant behavior — 失当行为"],
+            "examples": [{"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}],
+            "usageNotes": ["比 wrong 更正式。"]
+          },
           "learningNotes": "## Heading\\n- Concise learning point"
         }
         <<<END_ENGLISH_COACH_APP_DATA>>>

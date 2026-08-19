@@ -59,12 +59,61 @@ struct CoachCard: Codable, Equatable, Identifiable {
     let presentation: SyntaxPresentation?
 }
 
+struct WordStudyExample: Codable, Equatable {
+    let english: String
+    let chinese: String?
+}
+
+struct WordStudy: Codable, Equatable {
+    let entry: String
+    let phoneticUS: String?
+    let category: String?
+    let phraseParts: [String]?
+    let partOfSpeech: [String]?
+    let meanings: [String]?
+    let wordForms: [String]?
+    let tensePatterns: [String]?
+    let collocations: [String]?
+    let examples: [WordStudyExample]?
+    let usageNotes: [String]?
+
+    private enum CodingKeys: String, CodingKey {
+        case entry
+        case phoneticUS
+        case category
+        case phraseParts
+        case partOfSpeech
+        case meanings
+        case wordForms
+        case tensePatterns
+        case collocations
+        case examples
+        case usageNotes
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        entry = try container.decodeIfPresent(String.self, forKey: .entry) ?? ""
+        phoneticUS = try container.decodeIfPresent(String.self, forKey: .phoneticUS)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+        phraseParts = try container.decodeIfPresent([String].self, forKey: .phraseParts)
+        partOfSpeech = try container.decodeIfPresent([String].self, forKey: .partOfSpeech)
+        meanings = try container.decodeIfPresent([String].self, forKey: .meanings)
+        wordForms = try container.decodeIfPresent([String].self, forKey: .wordForms)
+        tensePatterns = try container.decodeIfPresent([String].self, forKey: .tensePatterns)
+        collocations = try container.decodeIfPresent([String].self, forKey: .collocations)
+        examples = try container.decodeIfPresent([WordStudyExample].self, forKey: .examples)
+        usageNotes = try container.decodeIfPresent([String].self, forKey: .usageNotes)
+    }
+}
+
 struct ParsedCoachOutput: Equatable {
     let minimal: String?
     let relaxed: String?
     let formal: String?
     let mode: CoachInputMode
     let cards: [CoachCard]
+    let wordStudy: WordStudy?
     let notes: String
     let raw: String
 
@@ -75,12 +124,14 @@ struct ParsedCoachOutput: Equatable {
         notes: String,
         raw: String,
         mode: CoachInputMode = .unknown,
-        cards: [CoachCard]? = nil
+        cards: [CoachCard]? = nil,
+        wordStudy: WordStudy? = nil
     ) {
         self.minimal = minimal
         self.relaxed = relaxed
         self.formal = formal
         self.mode = mode
+        self.wordStudy = wordStudy
         self.notes = notes
         self.raw = raw
 

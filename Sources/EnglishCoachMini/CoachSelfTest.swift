@@ -140,6 +140,42 @@ enum CoachSelfTest {
             parsedWord.notes == wordSample
         ]
 
+        let structuredWordSample = """
+        <<<ENGLISH_COACH_APP_DATA>>>
+        {
+          "mode": "word",
+          "cards": [],
+          "wordStudy": {
+            "entry": "errant",
+            "phoneticUS": "/əˈrɛnt/",
+            "category": "word",
+            "phraseParts": [],
+            "partOfSpeech": ["adjective — 偏离规范的"],
+            "meanings": ["偏离正常、规范或预期的"],
+            "wordForms": ["err — 犯错", "error — 错误"],
+            "tensePatterns": [],
+            "collocations": ["errant behavior — 失当行为"],
+            "examples": [
+              {"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}
+            ],
+            "usageNotes": ["比 wrong 更正式。"]
+          },
+          "learningNotes": "## 补充说明\\n- 这里是补充提示。"
+        }
+        <<<END_MARKER>>>
+        """
+        let parsedStructuredWord = CoachOutputParser.parse(structuredWordSample)
+        let structuredWordChecks = [
+            parsedStructuredWord.mode == .word,
+            parsedStructuredWord.wordStudy?.entry == "errant",
+            parsedStructuredWord.wordStudy?.phoneticUS == "/əˈrɛnt/",
+            parsedStructuredWord.wordStudy?.tensePatterns?.isEmpty == true,
+            parsedStructuredWord.wordStudy?.examples?.count == 1,
+            parsedStructuredWord.notes.contains("补充提示"),
+            !parsedStructuredWord.notes.contains("ENGLISH_COACH_APP_DATA"),
+            !parsedStructuredWord.notes.contains("END_MARKER")
+        ]
+
         let learningNotes = """
         ### 重点表达
 
@@ -220,7 +256,8 @@ enum CoachSelfTest {
         ]
 
         let passed = (
-            sentenceChecks + structuredChecks + understandChecks + wordChecks + noteChecks
+            sentenceChecks + structuredChecks + understandChecks + wordChecks
+                + structuredWordChecks + noteChecks
                 + providerChecks
         )
             .allSatisfy { $0 }

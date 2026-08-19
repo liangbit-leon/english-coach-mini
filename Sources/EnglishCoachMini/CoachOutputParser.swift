@@ -7,6 +7,10 @@ enum CoachOutputParser {
     private static let formalMarker = "---tone 官方／书面"
     private static let appDataStart = CoachProviderContract.appDataStart
     private static let appDataEnd = CoachProviderContract.appDataEnd
+    private static let appDataEndAliases = [
+        CoachProviderContract.appDataEnd,
+        "<<<END_MARKER>>>"
+    ]
 
     private struct LegacyOutput {
         let minimal: String
@@ -19,6 +23,22 @@ enum CoachOutputParser {
         let mode: CoachInputMode
         let cards: [CoachCard]
         let learningNotes: String
+        let wordStudy: WordStudy?
+
+        private enum CodingKeys: String, CodingKey {
+            case mode
+            case cards
+            case learningNotes
+            case wordStudy
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            mode = try container.decodeIfPresent(CoachInputMode.self, forKey: .mode) ?? .unknown
+            cards = try container.decodeIfPresent([CoachCard].self, forKey: .cards) ?? []
+            learningNotes = try container.decodeIfPresent(String.self, forKey: .learningNotes) ?? ""
+            wordStudy = try container.decodeIfPresent(WordStudy.self, forKey: .wordStudy)
+        }
     }
 
     static func parse(_ raw: String) -> ParsedCoachOutput {
@@ -41,7 +61,8 @@ enum CoachOutputParser {
                 notes: notes,
                 raw: raw,
                 mode: appData.mode,
-                cards: cards
+                cards: cards,
+                wordStudy: appData.wordStudy
             )
         }
 
@@ -109,15 +130,11 @@ enum CoachOutputParser {
     }
 
     private static func parseAppData(_ raw: String) -> AppData? {
-        guard let startRange = raw.range(of: appDataStart),
-              let endRange = raw.range(
-                of: appDataEnd,
-                range: startRange.upperBound..<raw.endIndex
-              ) else {
+        guard let ranges = appDataRanges(in: raw) else {
             return nil
         }
 
-        var json = String(raw[startRange.upperBound..<endRange.lowerBound])
+        var json = String(raw[ranges.start.upperBound..<ranges.end.lowerBound])
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         if json.hasPrefix("```json") {
@@ -132,6 +149,18 @@ enum CoachOutputParser {
 
         guard let data = json.data(using: .utf8) else { return nil }
         return try? JSONDecoder().decode(AppData.self, from: data)
+    }
+
+    private static func appDataRanges(in text: String)
+        -> (start: Range<String.Index>, end: Range<String.Index>)? {
+        guard let startRange = text.range(of: appDataStart) else { return nil }
+        let endRange = appDataEndAliases
+            .compactMap { marker in
+                text.range(of: marker, range: startRange.upperBound..<text.endIndex)
+            }
+            .min { $0.lowerBound < $1.lowerBound }
+        guard let endRange else { return nil }
+        return (startRange, endRange)
     }
 
     private static func sanitizeCards(
@@ -253,13 +282,9 @@ enum CoachOutputParser {
 
     private static func cleanNotes(_ text: String) -> String {
         let withoutAppData: String
-        if let startRange = text.range(of: appDataStart),
-           let endRange = text.range(
-            of: appDataEnd,
-            range: startRange.upperBound..<text.endIndex
-           ) {
-            withoutAppData = String(text[..<startRange.lowerBound])
-                + String(text[endRange.upperBound...])
+        if let ranges = appDataRanges(in: text) {
+            withoutAppData = String(text[..<ranges.start.lowerBound])
+                + String(text[ranges.end.upperBound...])
         } else {
             withoutAppData = text
         }

@@ -296,6 +296,8 @@ enum ExternalProviderPrompt {
 
         Write concise Markdown learningNotes in Chinese with English examples. Select three to five high-value points appropriate to the detected mode.
 
+        For word mode, return an empty cards array and a structured wordStudy object; wordStudy is mandatory for a single English word or short phrase. This is a learning card, not a sentence translation. Include the exact entry, American English IPA in phoneticUS, whether it is a word or phrase, phraseParts for multi-word phrases, partOfSpeech, core meanings, wordForms, tensePatterns when relevant, collocations, two or three bilingual examples, and concise usageNotes. Do not invent a tense for a noun or phrase. Use an empty array when a section is not applicable, but never omit wordStudy.
+
         Output only the following marker block with valid JSON. Escape newlines inside learningNotes as \\n.
         \(CoachProviderContract.appDataStart)
         {
@@ -324,6 +326,19 @@ enum ExternalProviderPrompt {
               }
             }
           ],
+          "wordStudy": {
+            "entry": "errant",
+            "phoneticUS": "/əˈrɛnt/",
+            "category": "word",
+            "phraseParts": [],
+            "partOfSpeech": ["adjective — 偏离规范的"],
+            "meanings": ["偏离正常、规范或预期的"],
+            "wordForms": ["err — 犯错", "error — 错误"],
+            "tensePatterns": [],
+            "collocations": ["errant behavior — 失当行为"],
+            "examples": [{"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}],
+            "usageNotes": ["比 wrong 更正式。"]
+          },
           "learningNotes": "## Heading\\n- Concise point"
         }
         \(CoachProviderContract.appDataEnd)

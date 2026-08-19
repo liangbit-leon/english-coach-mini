@@ -15,9 +15,11 @@ so the same learning experience can run on Codex or another model provider.
 7. Copy either clean, ready-to-send sentence.
 
 The app automatically adapts its analysis for Chinese expression, broken English,
-complex English reading, and word or fragment input. Sentence cards use subtle
-phrase separation, predicate anchors, and protected-meaning emphasis while Copy
-always returns unmarked text.
+complex English reading, and word or fragment input. Word mode becomes a focused
+vocabulary study card with American IPA, part of speech, meanings, forms and
+tenses when relevant, phrase parts, collocations, examples, and usage notes.
+Sentence cards use subtle phrase separation, predicate anchors, and
+protected-meaning emphasis while Copy always returns unmarked text.
 
 By default, the app invokes the installed `english-expression-coach` Skill with
 `gpt-5.6-luna` and low reasoning. It runs Codex in read-only, ephemeral mode and

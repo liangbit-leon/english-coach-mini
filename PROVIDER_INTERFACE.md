@@ -74,6 +74,31 @@ The raw response must contain the version-1 data block requested by the prompt:
 The app validates and normalizes the cards before rendering. Copy always uses the
 clean `text` field rather than visual chunks.
 
+For `word` mode, return an empty `cards` array and a `wordStudy` object. The app
+uses it to render the vocabulary learning view:
+
+```json
+{
+  "entry": "errant",
+  "phoneticUS": "/əˈrɛnt/",
+  "category": "word",
+  "phraseParts": [],
+  "partOfSpeech": ["adjective — 偏离正确路径或规范的"],
+  "meanings": ["偏离正常、规范或预期的"],
+  "wordForms": ["err — 犯错", "error — 错误", "erroneous — 错误的"],
+  "tensePatterns": [],
+  "collocations": ["errant behavior — 失当行为"],
+  "examples": [
+    {"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}
+  ],
+  "usageNotes": ["比 wrong 更正式，常带有偏离规范或轨道的意味。"]
+}
+```
+
+`phoneticUS` must use American English IPA. `tensePatterns` is only for verbs
+or verb phrases; do not manufacture tense information for nouns, adjectives, or
+fixed phrases.
+
 ## Native Swift provider
 
 For an in-process integration, implement `CoachProviding` and register it in

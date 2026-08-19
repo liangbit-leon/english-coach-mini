@@ -187,7 +187,9 @@ struct CoachView: View {
 
     private func resultView(_ output: ParsedCoachOutput) -> some View {
         Group {
-            if !output.hasToneCards || store.selectedResultTab == .notes {
+            if output.mode == .word, let wordStudy = output.wordStudy {
+                wordStudyView(wordStudy, fallbackNotes: output.notes)
+            } else if !output.hasToneCards || store.selectedResultTab == .notes {
                 learningNotesView(output.notes)
             } else {
                 expressionCardsView(output)
@@ -219,6 +221,14 @@ struct CoachView: View {
     private func learningNotesView(_ notes: String) -> some View {
         ScrollView {
             LearningNotesView(notes: notes)
+                .padding(18)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func wordStudyView(_ study: WordStudy, fallbackNotes: String) -> some View {
+        ScrollView {
+            WordStudyView(study: study, fallbackNotes: fallbackNotes)
                 .padding(18)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -610,6 +620,180 @@ private struct LearningNotesView: View {
             InlineMarkdownText(text)
                 .padding(.vertical, 5)
         }
+    }
+}
+
+private struct WordStudyView: View {
+    let study: WordStudy
+    let fallbackNotes: String
+
+    private var categoryLabel: String {
+        study.category?.lowercased() == "phrase" ? "短语" : "词汇"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(study.entry)
+                    .font(.system(size: 25, weight: .semibold))
+                    .textSelection(.enabled)
+
+                Text(categoryLabel)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.quaternary, in: Capsule())
+
+                Spacer()
+            }
+
+            if let phoneticUS = study.phoneticUS,
+               !phoneticUS.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                HStack(spacing: 7) {
+                    Text("美式音标")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(phoneticUS)
+                        .font(.system(size: 16, design: .monospaced))
+                        .foregroundStyle(.primary)
+                        .textSelection(.enabled)
+                }
+                .padding(.top, 7)
+            }
+
+            if let phraseParts = study.phraseParts, !phraseParts.isEmpty {
+                WordStudySection(title: "短语拆分", systemImage: "text.word.spacing") {
+                    FlowLayout(spacing: 7) {
+                        ForEach(Array(phraseParts.enumerated()), id: \.offset) { index, part in
+                            Text(part)
+                                .font(.system(size: 14.5))
+                                .foregroundStyle(.primary)
+                                .padding(.vertical, 3)
+
+                            if index < phraseParts.count - 1 {
+                                Text("·")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
+                }
+            }
+
+            wordStudyListSection(
+                title: "词性",
+                systemImage: "character.textbox",
+                items: study.partOfSpeech
+            )
+            wordStudyListSection(
+                title: "核心意思",
+                systemImage: "lightbulb",
+                items: study.meanings
+            )
+            wordStudyListSection(
+                title: "词形变化",
+                systemImage: "arrow.triangle.branch",
+                items: study.wordForms
+            )
+            wordStudyListSection(
+                title: "时态与句型",
+                systemImage: "clock.arrow.circlepath",
+                items: study.tensePatterns
+            )
+            wordStudyListSection(
+                title: "常见搭配",
+                systemImage: "link",
+                items: study.collocations
+            )
+
+            if let examples = study.examples, !examples.isEmpty {
+                WordStudySection(title: "例句", systemImage: "quote.bubble") {
+                    VStack(alignment: .leading, spacing: 11) {
+                        ForEach(Array(examples.enumerated()), id: \.offset) { index, example in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text("\(index + 1)")
+                                        .font(.caption2.monospacedDigit())
+                                        .foregroundStyle(.tertiary)
+                                        .frame(width: 14, alignment: .trailing)
+                                    Text(example.english)
+                                        .font(.system(size: 14.5))
+                                        .textSelection(.enabled)
+                                }
+
+                                if let chinese = example.chinese,
+                                   !chinese.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                    Text(chinese)
+                                        .font(.system(size: 13.5))
+                                        .foregroundStyle(.secondary)
+                                        .padding(.leading, 22)
+                                        .textSelection(.enabled)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            wordStudyListSection(
+                title: "使用提醒",
+                systemImage: "exclamationmark.circle",
+                items: study.usageNotes
+            )
+
+            if !fallbackNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                WordStudySection(title: "补充说明", systemImage: "note.text") {
+                    InlineMarkdownText(fallbackNotes)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(.quaternary.opacity(0.48), in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(Color.secondary.opacity(0.12))
+        }
+    }
+
+    @ViewBuilder
+    private func wordStudyListSection(
+        title: String,
+        systemImage: String,
+        items: [String]?
+    ) -> some View {
+        if let items, !items.isEmpty {
+            WordStudySection(title: title, systemImage: systemImage) {
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                        HStack(alignment: .firstTextBaseline, spacing: 9) {
+                            Circle()
+                                .fill(Color.accentColor.opacity(0.75))
+                                .frame(width: 4, height: 4)
+                            InlineMarkdownText(item)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct WordStudySection<Content: View>: View {
+    let title: String
+    let systemImage: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: systemImage)
+                .font(.system(size: 13.5, weight: .medium))
+                .foregroundStyle(Color.secondary.opacity(0.9))
+
+            content()
+        }
+        .padding(.top, 18)
     }
 }
 
