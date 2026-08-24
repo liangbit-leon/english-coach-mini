@@ -47,8 +47,6 @@ struct SyntaxChunk: Codable, Equatable {
 
 struct SyntaxPresentation: Codable, Equatable {
     let chunks: [SyntaxChunk]
-    let spine: [String]
-    let buildSteps: [String]
 }
 
 struct CoachCard: Codable, Equatable, Identifiable {

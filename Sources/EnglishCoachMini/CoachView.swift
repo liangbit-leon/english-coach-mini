@@ -299,22 +299,6 @@ private struct ToneCard: View {
             }
             .padding(14)
 
-            if let presentation,
-               !presentation.spine.isEmpty || !presentation.buildSteps.isEmpty {
-                StructureDetailsView(presentation: presentation)
-                    .padding(.horizontal, 14)
-                    .padding(.top, 12)
-                    .padding(.bottom, 14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        Color(nsColor: .windowBackgroundColor).opacity(0.34)
-                    )
-                    .overlay(alignment: .top) {
-                        Rectangle()
-                            .fill(tint.opacity(0.13))
-                            .frame(height: 1)
-                    }
-            }
         }
         .background(tint.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -369,48 +353,6 @@ private struct PhraseChunkLayout: View {
                 .font(.system(size: 15, weight: .regular))
                 .foregroundStyle(.primary)
                 .underline(true, color: Color.accentColor.opacity(0.55))
-        }
-    }
-}
-
-private struct StructureDetailsView: View {
-    let presentation: SyntaxPresentation
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("Logic spine")
-                    .font(.caption2)
-                    .foregroundStyle(Color.secondary.opacity(0.62))
-                Text(presentation.spine.joined(separator: "  →  "))
-                    .font(.system(size: 13.5, weight: .regular))
-                    .foregroundStyle(Color.secondary.opacity(0.82))
-                    .textSelection(.enabled)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Build")
-                    .font(.caption2)
-                    .foregroundStyle(Color.secondary.opacity(0.62))
-
-                ForEach(Array(presentation.buildSteps.enumerated()), id: \.offset) { index, step in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(index + 1)")
-                            .font(.caption2.monospacedDigit())
-                            .foregroundStyle(Color.secondary.opacity(0.52))
-                            .frame(width: 12, alignment: .trailing)
-                        Text(step)
-                            .font(.system(size: 13.5, weight: .regular))
-                            .foregroundStyle(
-                                index == presentation.buildSteps.count - 1
-                                    ? Color.primary.opacity(0.72)
-                                    : Color.secondary.opacity(0.78)
-                            )
-                            .lineSpacing(2)
-                            .textSelection(.enabled)
-                    }
-                }
-            }
         }
     }
 }

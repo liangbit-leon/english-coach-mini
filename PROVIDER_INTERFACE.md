@@ -15,7 +15,7 @@ Codex example:
 ```json
 {
   "provider": "codex",
-  "model": "gpt-5.6-luna",
+  "model": "gpt-5.6-sol",
   "reasoningEffort": "low"
 }
 ```
@@ -49,7 +49,7 @@ standard input:
 ```json
 {
   "schemaVersion": 1,
-  "promptVersion": "2026-08-13.v1",
+  "promptVersion": "2026-08-24.v3",
   "expression": "the user's exact input",
   "prompt": "the complete provider-neutral coaching prompt",
   "model": "optional model identifier"
@@ -71,8 +71,9 @@ The raw response must contain the version-1 data block requested by the prompt:
 <<<END_ENGLISH_COACH_APP_DATA>>>
 ```
 
-The app validates and normalizes the cards before rendering. Copy always uses the
-clean `text` field rather than visual chunks.
+The app validates and normalizes the cards before rendering. Each sentence card's
+`presentation` contains phrase-level `chunks` that reconstruct the complete card
+text in order. Copy always uses the clean `text` field rather than visual chunks.
 
 For `word` mode, return an empty `cards` array and a `wordStudy` object. The app
 uses it to render the vocabulary learning view:

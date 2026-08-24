@@ -10,8 +10,8 @@ so the same learning experience can run on Codex or another model provider.
 2. Type or paste a Chinese or English expression.
 3. Press `Return` for a new line, or `Command + Return` to run Coach.
 4. Review the concise spoken and formal written versions.
-5. Read the always-visible logic spine and progressive build beneath each expression.
-6. Switch to Learning Notes for input-specific analysis.
+5. Read the phrase-level structure directly in each expression card.
+6. Switch to Learning Notes for sentence-level grammar and keyword analysis.
 7. Copy either clean, ready-to-send sentence.
 
 The app automatically adapts its analysis for Chinese expression, broken English,
@@ -22,7 +22,7 @@ Sentence cards use subtle phrase separation, predicate anchors, and
 protected-meaning emphasis while Copy always returns unmarked text.
 
 By default, the app invokes the installed `english-expression-coach` Skill with
-`gpt-5.6-luna` and low reasoning. It runs Codex in read-only, ephemeral mode and
+`gpt-5.6-sol` and low reasoning. It runs Codex in read-only, ephemeral mode and
 does not change the global Codex model configuration or the installed Skill.
 
 ## Model providers

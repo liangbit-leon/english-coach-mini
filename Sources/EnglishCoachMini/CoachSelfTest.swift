@@ -48,9 +48,7 @@ enum CoachSelfTest {
                   {"text": "I’ll", "style": "core"},
                   {"text": "get back", "style": "predicate"},
                   {"text": "to you later.", "style": "modifier"}
-                ],
-                "spine": ["I", "get back", "to you"],
-                "buildSteps": ["I’ll get back to you.", "I’ll get back to you later."]
+                ]
               }
             },
             {
@@ -63,13 +61,11 @@ enum CoachSelfTest {
                   {"text": "I", "style": "core"},
                   {"text": "will review", "style": "predicate"},
                   {"text": "this and respond later today.", "style": "core"}
-                ],
-                "spine": ["I", "review", "respond"],
-                "buildSteps": ["I will respond.", "I will review this and respond later today."]
+                ]
               }
             }
           ],
-          "learningNotes": "## 原句判断\\n- 语法需要修改。\\n\\n## 可复用结构\\n- `get back to someone`"
+          "learningNotes": "## 语法拆分\\n- 语法需要修改。\\n\\n## 关键词\\n- `get back to someone`"
         }
         <<<END_ENGLISH_COACH_APP_DATA>>>
         """
@@ -79,8 +75,9 @@ enum CoachSelfTest {
             parsedStructured.mode == .improve,
             parsedStructured.cards.count == 2,
             parsedStructured.cards[0].presentation?.chunks[1].style == .predicate,
-            parsedStructured.cards[0].presentation?.buildSteps.count == 2,
-            parsedStructured.notes.contains("原句判断"),
+            parsedStructured.cards[0].presentation?.chunks.count == 3,
+            parsedStructured.notes.contains("语法拆分"),
+            parsedStructured.notes.contains("关键词"),
             !parsedStructured.notes.contains("ENGLISH_COACH_APP_DATA")
         ]
 
@@ -95,9 +92,7 @@ enum CoachSelfTest {
               "subtitle": "ignored",
               "text": "The board needs verification before approval.",
               "presentation": {
-                "chunks": [{"text": "The board needs verification before approval.", "style": "core"}],
-                "spine": ["board", "needs verification", "before approval"],
-                "buildSteps": ["The board needs verification."]
+                "chunks": [{"text": "The board needs verification before approval.", "style": "core"}]
               }
             },
             {
@@ -111,13 +106,11 @@ enum CoachSelfTest {
                   {"text": "the board", "style": "core"},
                   {"text": "could not approve", "style": "protected"},
                   {"text": "it until the assumptions had been verified.", "style": "protected"}
-                ],
-                "spine": ["board", "could not approve", "until verified"],
-                "buildSteps": ["The board could not approve it."]
+                ]
               }
             }
           ],
-          "learningNotes": "## 句子意思\\n- 批准以核验为前提。"
+          "learningNotes": "## 语法拆分\\n- 批准以核验为前提。\\n\\n## 关键词\\n- `until` 引导时间条件。"
         }
         <<<END_ENGLISH_COACH_APP_DATA>>>
         """
@@ -125,8 +118,7 @@ enum CoachSelfTest {
         let understandChecks = [
             parsedUnderstand.cards[0].title == "简明意思",
             parsedUnderstand.cards[1].title == "原句拆分",
-            parsedUnderstand.cards[1].presentation?.buildSteps.last
-                == parsedUnderstand.cards[1].text
+            parsedUnderstand.cards[1].presentation?.chunks.count == 4
         ]
 
         let wordSample = """
@@ -226,6 +218,13 @@ enum CoachSelfTest {
         )
         try? FileManager.default.removeItem(at: configurationURL)
 
+        let missingConfigurationURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("english-coach-missing-\(UUID().uuidString).json")
+        let defaultProvider = CoachProviderFactory.make(
+            environment: [:],
+            configurationURL: missingConfigurationURL
+        )
+
         let adapterSemaphore = DispatchSemaphore(value: 0)
         var echoedRequest: ExternalCoachRequest?
         let adapterProvider = ExternalCommandCoachProvider(
@@ -248,8 +247,15 @@ enum CoachSelfTest {
             providerPrompt.contains("Keep this exact."),
             providerPrompt.contains(CoachProviderContract.appDataStart),
             providerPrompt.contains(CoachProviderContract.appDataEnd),
+            providerPrompt.contains("## 语法拆分"),
+            providerPrompt.contains("## 关键词"),
+            providerPrompt.contains("Concision may reduce words, never facts."),
+            !providerPrompt.localizedCaseInsensitiveContains("logic spine"),
+            !providerPrompt.localizedCaseInsensitiveContains("build steps"),
+            !providerPrompt.contains("\"sentences\""),
             decodedRequest == providerRequest,
             configuredProvider.displayName == "Test Provider",
+            defaultProvider.displayName == "Sol · Low",
             adapterFinished,
             echoedRequest?.expression == "Adapter test.",
             echoedRequest?.promptVersion == CoachProviderContract.promptVersion

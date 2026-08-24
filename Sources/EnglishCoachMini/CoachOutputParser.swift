@@ -205,32 +205,11 @@ enum CoachOutputParser {
         let reconstructed = chunks.map(\.text).joined(separator: " ")
         guard normalized(reconstructed) == normalized(text) else {
             return SyntaxPresentation(
-                chunks: [SyntaxChunk(text: text, style: .core)],
-                spine: presentation.spine,
-                buildSteps: presentation.buildSteps
+                chunks: [SyntaxChunk(text: text, style: .core)]
             )
         }
 
-        var buildSteps = presentation.buildSteps.filter {
-            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-        if buildSteps.last.map({ normalized($0) != normalized(text) }) ?? true {
-            if buildSteps.count >= 4 {
-                buildSteps[buildSteps.count - 1] = text
-            } else {
-                buildSteps.append(text)
-            }
-        } else if !buildSteps.isEmpty {
-            buildSteps[buildSteps.count - 1] = text
-        }
-
-        return SyntaxPresentation(
-            chunks: chunks,
-            spine: presentation.spine.filter {
-                !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            },
-            buildSteps: buildSteps
-        )
+        return SyntaxPresentation(chunks: chunks)
     }
 
     private static func cardDisplay(
@@ -242,7 +221,7 @@ enum CoachOutputParser {
         case .understand:
             return index == 0
                 ? ("plain", "简明意思", "Plain-English meaning")
-                : ("original", "原句拆分", "Original sentence · structure view")
+                : ("original", "原句拆分", "Original sentence · sentence view")
         case .express, .improve:
             return index == 0
                 ? ("concise", "极简／口语", "Shortest natural version")
