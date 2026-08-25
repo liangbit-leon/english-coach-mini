@@ -21,12 +21,14 @@ enum CoachOutputParser {
 
     private struct AppData: Decodable {
         let mode: CoachInputMode
+        let optimizedChinese: String
         let cards: [CoachCard]
         let learningNotes: String
         let wordStudy: WordStudy?
 
         private enum CodingKeys: String, CodingKey {
             case mode
+            case optimizedChinese
             case cards
             case learningNotes
             case wordStudy
@@ -35,6 +37,7 @@ enum CoachOutputParser {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             mode = try container.decodeIfPresent(CoachInputMode.self, forKey: .mode) ?? .unknown
+            optimizedChinese = try container.decodeIfPresent(String.self, forKey: .optimizedChinese) ?? ""
             cards = try container.decodeIfPresent([CoachCard].self, forKey: .cards) ?? []
             learningNotes = try container.decodeIfPresent(String.self, forKey: .learningNotes) ?? ""
             wordStudy = try container.decodeIfPresent(WordStudy.self, forKey: .wordStudy)
@@ -53,6 +56,9 @@ enum CoachOutputParser {
             let notes = appNotes.isEmpty
                 ? (legacy?.notes ?? cleanNotes(raw))
                 : appNotes
+            let optimizedChinese = appData.mode == .express
+                ? appData.optimizedChinese.trimmingCharacters(in: .whitespacesAndNewlines)
+                : ""
 
             return ParsedCoachOutput(
                 minimal: legacy?.minimal,
@@ -62,7 +68,8 @@ enum CoachOutputParser {
                 raw: raw,
                 mode: appData.mode,
                 cards: cards,
-                wordStudy: appData.wordStudy
+                wordStudy: appData.wordStudy,
+                optimizedChinese: optimizedChinese.isEmpty ? nil : optimizedChinese
             )
         }
 

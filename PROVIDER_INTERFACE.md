@@ -49,7 +49,7 @@ standard input:
 ```json
 {
   "schemaVersion": 1,
-  "promptVersion": "2026-08-24.v3",
+  "promptVersion": "2026-08-25.v4",
   "expression": "the user's exact input",
   "prompt": "the complete provider-neutral coaching prompt",
   "model": "optional model identifier"
@@ -74,6 +74,10 @@ The raw response must contain the version-1 data block requested by the prompt:
 The app validates and normalizes the cards before rendering. Each sentence card's
 `presentation` contains phrase-level `chunks` that reconstruct the complete card
 text in order. Copy always uses the clean `text` field rather than visual chunks.
+For `express` mode, the optional `optimizedChinese` response field contains the
+complete revised Chinese wording that both English cards translate. It must retain
+all material information and the source's interpersonal tone. For other modes,
+return an empty string or omit the field.
 
 For `word` mode, return an empty `cards` array and a `wordStudy` object. The app
 uses it to render the vocabulary learning view:

@@ -11,7 +11,7 @@ protocol CoachProviding: AnyObject {
 
 enum CoachProviderContract {
     static let schemaVersion = 1
-    static let promptVersion = "2026-08-24.v3"
+    static let promptVersion = "2026-08-25.v4"
     static let appDataStart = "<<<ENGLISH_COACH_APP_DATA>>>"
     static let appDataEnd = "<<<END_ENGLISH_COACH_APP_DATA>>>"
 }
@@ -290,14 +290,17 @@ enum ExternalProviderPrompt {
         - understand: grammatical but structurally complex English for comprehension.
         - word: a word or fragment.
 
-        Before writing any sentence card, silently inventory every material meaning in the input: actor, action, object or topic, recipient, attribution, examples, conditions, cause, time, amount, status, uncertainty, permission, responsibility, relationship, and commitment strength. Preserve every applicable item in the response. Do not omit, weaken, merge away, or invent meaning. Concision may reduce words, never facts.
+        Before writing any sentence card, silently inventory every material meaning in the input: actor, action, object or topic, recipient, attribution, examples, conditions, cause, time, amount, status, uncertainty, permission, responsibility, relationship, commitment strength, and interpersonal tone such as polite, firm, urgent, or cautious. Preserve every applicable item in the response. Do not omit, weaken, merge away, or invent meaning. Concision may reduce words, never facts.
 
-        For express and improve, return two cards: concise spoken English and formal written English. Both cards must preserve the complete source meaning. For understand, return a faithful plain-English meaning card and an original-sentence card whose text exactly matches the input. For word, return no cards.
+        For express, first produce optimizedChinese in natural Chinese. Improve clarity, information order, and fluency while preserving every material fact, proper name, acronym, project or legal term, and the source's interpersonal tone and force. Do not translate, summarize, add, soften, or intensify the message. Use optimizedChinese as the meaning basis for both English versions. For every non-express mode, optimizedChinese must be an empty string.
+
+        For express and improve, return two cards: concise spoken English and formal written English. Both cards must preserve the complete source meaning and tone; concise means economical and conversational, not incomplete. For understand, return a faithful plain-English meaning card and an original-sentence card whose text exactly matches the input. For word, return no cards.
 
         For every sentence card, provide readable phrase chunks in exact order. Joining the chunks with one space must reconstruct the card text exactly. Chunk styles are core, predicate, modifier, or protected. Use protected for negation, modality, attribution, conditions, permission, commitment, approval status, or anything whose weakening changes the meaning.
 
         For every sentence-mode response, whether Chinese-to-English or English-to-English, write concise Markdown learningNotes in Chinese using these two required headings:
-        - ## 语法拆分: break down each sentence's subject, predicate, object or complement, clauses, modifiers, and the most useful grammar pattern. For Chinese-to-English, explain how the source meaning maps into the English structure. For English-to-English, compare the source and revision when a correction was needed.
+        Do not include logic, reasoning-flow, message-flow, or communication-structure analysis. Under 语法拆分, start directly from each English sentence and its grammatical components.
+        - ## 语法拆分: break down each sentence's subject, predicate, object or complement, clauses, modifiers, and the most useful grammar pattern. For Chinese-to-English, explain how optimizedChinese maps into both English versions. For English-to-English, compare the source with both revisions when a correction was needed.
         - ## 关键词: explain the most important words, phrases, and collocations, including Chinese meaning, grammatical role or part of speech, register, and a reusable pattern or example.
 
         For word mode, return an empty cards array and a structured wordStudy object; wordStudy is mandatory for a single English word or short phrase. This is a learning card, not a sentence translation. Include the exact entry, American English IPA in phoneticUS, whether it is a word or phrase, phraseParts for multi-word phrases, partOfSpeech, core meanings, wordForms, tensePatterns when relevant, collocations, two or three bilingual examples, and concise usageNotes. Do not invent a tense for a noun or phrase. Use an empty array when a section is not applicable, but never omit wordStudy.
@@ -306,6 +309,7 @@ enum ExternalProviderPrompt {
         \(CoachProviderContract.appDataStart)
         {
           "mode": "express",
+          "optimizedChinese": "优化后的完整中文表达",
           "cards": [
             {
               "id": "concise",

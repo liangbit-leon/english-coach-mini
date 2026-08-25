@@ -37,6 +37,7 @@ enum CoachSelfTest {
         <<<ENGLISH_COACH_APP_DATA>>>
         {
           "mode": "improve",
+          "optimizedChinese": "",
           "cards": [
             {
               "id": "concise",
@@ -76,9 +77,58 @@ enum CoachSelfTest {
             parsedStructured.cards.count == 2,
             parsedStructured.cards[0].presentation?.chunks[1].style == .predicate,
             parsedStructured.cards[0].presentation?.chunks.count == 3,
+            parsedStructured.optimizedChinese == nil,
             parsedStructured.notes.contains("语法拆分"),
             parsedStructured.notes.contains("关键词"),
             !parsedStructured.notes.contains("ENGLISH_COACH_APP_DATA")
+        ]
+
+        let expressSample = """
+        <<<ENGLISH_COACH_APP_DATA>>>
+        {
+          "mode": "express",
+          "optimizedChinese": "如果预算明天仍未获批，请先准备材料，不要承诺启动日期。",
+          "cards": [
+            {
+              "id": "concise",
+              "title": "ignored",
+              "subtitle": "ignored",
+              "text": "If the budget still isn't approved tomorrow, please prepare the materials but don't commit to a start date.",
+              "presentation": {
+                "chunks": [
+                  {"text": "If the budget still isn't approved tomorrow,", "style": "protected"},
+                  {"text": "please prepare the materials", "style": "predicate"},
+                  {"text": "but don't commit to a start date.", "style": "protected"}
+                ]
+              }
+            },
+            {
+              "id": "formal",
+              "title": "ignored",
+              "subtitle": "ignored",
+              "text": "If the budget remains unapproved tomorrow, please prepare the materials but do not commit to a commencement date.",
+              "presentation": {
+                "chunks": [
+                  {"text": "If the budget remains unapproved tomorrow,", "style": "protected"},
+                  {"text": "please prepare the materials", "style": "predicate"},
+                  {"text": "but do not commit to a commencement date.", "style": "protected"}
+                ]
+              }
+            }
+          ],
+          "learningNotes": "## 语法拆分\\n- 条件从句 + 主句。\\n\\n## 关键词\\n- `commit to` 表示作出承诺。"
+        }
+        <<<END_ENGLISH_COACH_APP_DATA>>>
+        """
+        let parsedExpress = CoachOutputParser.parse(expressSample)
+        let expressChecks = [
+            parsedExpress.mode == .express,
+            parsedExpress.optimizedChinese == "如果预算明天仍未获批，请先准备材料，不要承诺启动日期。",
+            parsedExpress.cards.count == 2,
+            parsedExpress.cards[0].title == "极简／口语",
+            parsedExpress.cards[1].title == "官方／书面",
+            parsedExpress.notes.contains("语法拆分"),
+            parsedExpress.notes.contains("关键词")
         ]
 
         let understandSample = """
@@ -249,6 +299,10 @@ enum CoachSelfTest {
             providerPrompt.contains(CoachProviderContract.appDataEnd),
             providerPrompt.contains("## 语法拆分"),
             providerPrompt.contains("## 关键词"),
+            providerPrompt.contains("first produce optimizedChinese"),
+            providerPrompt.contains("interpersonal tone"),
+            providerPrompt.contains("\"optimizedChinese\""),
+            providerPrompt.contains("Do not include logic"),
             providerPrompt.contains("Concision may reduce words, never facts."),
             !providerPrompt.localizedCaseInsensitiveContains("logic spine"),
             !providerPrompt.localizedCaseInsensitiveContains("build steps"),
@@ -262,7 +316,7 @@ enum CoachSelfTest {
         ]
 
         let passed = (
-            sentenceChecks + structuredChecks + understandChecks + wordChecks
+            sentenceChecks + structuredChecks + expressChecks + understandChecks + wordChecks
                 + structuredWordChecks + noteChecks
                 + providerChecks
         )

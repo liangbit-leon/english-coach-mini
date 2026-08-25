@@ -202,6 +202,16 @@ struct CoachView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 if output.hasToneCards {
+                    if let optimizedChinese = output.optimizedChinese {
+                        ToneCard(
+                            title: "优化后的中文",
+                            subtitle: "保留关键信息与原有语气",
+                            text: optimizedChinese,
+                            presentation: nil,
+                            tint: .blue
+                        )
+                    }
+
                     ForEach(Array(output.cards.enumerated()), id: \.element.id) { index, card in
                         ToneCard(
                             title: card.title,

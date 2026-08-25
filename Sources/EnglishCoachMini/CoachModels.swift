@@ -109,6 +109,7 @@ struct ParsedCoachOutput: Equatable {
     let minimal: String?
     let relaxed: String?
     let formal: String?
+    let optimizedChinese: String?
     let mode: CoachInputMode
     let cards: [CoachCard]
     let wordStudy: WordStudy?
@@ -123,11 +124,13 @@ struct ParsedCoachOutput: Equatable {
         raw: String,
         mode: CoachInputMode = .unknown,
         cards: [CoachCard]? = nil,
-        wordStudy: WordStudy? = nil
+        wordStudy: WordStudy? = nil,
+        optimizedChinese: String? = nil
     ) {
         self.minimal = minimal
         self.relaxed = relaxed
         self.formal = formal
+        self.optimizedChinese = optimizedChinese
         self.mode = mode
         self.wordStudy = wordStudy
         self.notes = notes
