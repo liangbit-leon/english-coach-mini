@@ -122,6 +122,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+enum CoachWindowPolicy {
+    static let collectionBehavior: NSWindow.CollectionBehavior = [.managed]
+    static let frameAutosaveName = "EnglishCoachMini.CoachPanel"
+}
+
 @MainActor
 final class CoachPanelController {
     private let store = CoachStore()
@@ -145,8 +150,12 @@ final class CoachPanelController {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.minSize = NSSize(width: 620, height: 520)
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.collectionBehavior = CoachWindowPolicy.collectionBehavior
         panel.backgroundColor = .windowBackgroundColor
+
+        let restoredFrame = panel.setFrameUsingName(CoachWindowPolicy.frameAutosaveName)
+        _ = panel.setFrameAutosaveName(CoachWindowPolicy.frameAutosaveName)
+        hasPositionedWindow = restoredFrame
 
         let rootView = CoachView(store: store) { [weak panel] in
             panel?.orderOut(nil)

@@ -315,10 +315,17 @@ enum CoachSelfTest {
             echoedRequest?.promptVersion == CoachProviderContract.promptVersion
         ]
 
+        let windowChecks = [
+            CoachWindowPolicy.collectionBehavior.contains(.managed),
+            !CoachWindowPolicy.collectionBehavior.contains(.canJoinAllSpaces),
+            !CoachWindowPolicy.collectionBehavior.contains(.moveToActiveSpace),
+            !CoachWindowPolicy.frameAutosaveName.isEmpty
+        ]
+
         let passed = (
             sentenceChecks + structuredChecks + expressChecks + understandChecks + wordChecks
                 + structuredWordChecks + noteChecks
-                + providerChecks
+                + providerChecks + windowChecks
         )
             .allSatisfy { $0 }
         print(passed ? "SELF_TEST_PASS" : "SELF_TEST_FAIL")
