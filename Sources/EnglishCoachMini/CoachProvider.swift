@@ -11,7 +11,7 @@ protocol CoachProviding: AnyObject {
 
 enum CoachProviderContract {
     static let schemaVersion = 1
-    static let promptVersion = "2026-08-13.v1"
+    static let promptVersion = "2026-08-25.v4"
     static let appDataStart = "<<<ENGLISH_COACH_APP_DATA>>>"
     static let appDataEnd = "<<<END_ENGLISH_COACH_APP_DATA>>>"
 }
@@ -75,7 +75,7 @@ enum CoachProviderFactory {
                     environment: environment,
                     key: "ENGLISH_COACH_MODEL",
                     fallback: configuration?.model
-                ) ?? "gpt-5.6-luna",
+                ) ?? "gpt-5.6-sol",
                 reasoningEffort: value(
                     environment: environment,
                     key: "ENGLISH_COACH_REASONING_EFFORT",
@@ -290,41 +290,66 @@ enum ExternalProviderPrompt {
         - understand: grammatical but structurally complex English for comprehension.
         - word: a word or fragment.
 
-        For express and improve, return two cards: concise spoken English and formal written English. For understand, return a plain-English meaning card and an original-sentence card whose text exactly matches the input. For word, return no cards.
+        Before writing any sentence card, silently inventory every material meaning in the input: actor, action, object or topic, recipient, attribution, examples, conditions, cause, time, amount, status, uncertainty, permission, responsibility, relationship, commitment strength, and interpersonal tone such as polite, firm, urgent, or cautious. Preserve every applicable item in the response. Do not omit, weaken, merge away, or invent meaning. Concision may reduce words, never facts.
 
-        For every sentence card, provide readable phrase chunks in exact order, a three-to-six-part logic spine, and two-to-four grammatical build steps ending with the exact card text. Chunk styles are core, predicate, modifier, or protected. Use protected for negation, modality, attribution, conditions, permission, commitment, approval status, or anything whose weakening changes the meaning.
+        For express, first produce optimizedChinese in natural Chinese. Improve clarity, information order, and fluency while preserving every material fact, proper name, acronym, project or legal term, and the source's interpersonal tone and force. Do not translate, summarize, add, soften, or intensify the message. Use optimizedChinese as the meaning basis for both English versions. For every non-express mode, optimizedChinese must be an empty string.
 
-        Write concise Markdown learningNotes in Chinese with English examples. Select three to five high-value points appropriate to the detected mode.
+        For express and improve, return two cards: concise spoken English and formal written English. Both cards must preserve the complete source meaning and tone; concise means economical and conversational, not incomplete. For understand, return a faithful plain-English meaning card and an original-sentence card whose text exactly matches the input. For word, return no cards.
+
+        For every sentence card, provide readable phrase chunks in exact order. Joining the chunks with one space must reconstruct the card text exactly. Chunk styles are core, predicate, modifier, or protected. Use protected for negation, modality, attribution, conditions, permission, commitment, approval status, or anything whose weakening changes the meaning.
+
+        For every sentence-mode response, whether Chinese-to-English or English-to-English, write concise Markdown learningNotes in Chinese using these two required headings:
+        Do not include logic, reasoning-flow, message-flow, or communication-structure analysis. Under 语法拆分, start directly from each English sentence and its grammatical components.
+        - ## 语法拆分: break down each sentence's subject, predicate, object or complement, clauses, modifiers, and the most useful grammar pattern. For Chinese-to-English, explain how optimizedChinese maps into both English versions. For English-to-English, compare the source with both revisions when a correction was needed.
+        - ## 关键词: explain the most important words, phrases, and collocations, including Chinese meaning, grammatical role or part of speech, register, and a reusable pattern or example.
+
+        For word mode, return an empty cards array and a structured wordStudy object; wordStudy is mandatory for a single English word or short phrase. This is a learning card, not a sentence translation. Include the exact entry, American English IPA in phoneticUS, whether it is a word or phrase, phraseParts for multi-word phrases, partOfSpeech, core meanings, wordForms, tensePatterns when relevant, collocations, two or three bilingual examples, and concise usageNotes. Do not invent a tense for a noun or phrase. Use an empty array when a section is not applicable, but never omit wordStudy.
 
         Output only the following marker block with valid JSON. Escape newlines inside learningNotes as \\n.
         \(CoachProviderContract.appDataStart)
         {
           "mode": "express",
+          "optimizedChinese": "优化后的完整中文表达",
           "cards": [
             {
               "id": "concise",
               "title": "极简／口语",
               "subtitle": "Shortest natural version",
-              "text": "Exact card text",
+              "text": "First complete sentence. Second complete sentence.",
               "presentation": {
-                "chunks": [{"text": "Phrase", "style": "core"}],
-                "spine": ["actor", "action", "object"],
-                "buildSteps": ["Simple safe sentence.", "Exact card text"]
+                "chunks": [
+                  {"text": "First complete sentence.", "style": "core"},
+                  {"text": "Second complete sentence.", "style": "core"}
+                ]
               }
             },
             {
               "id": "formal",
               "title": "官方／书面",
               "subtitle": "Email and management communication",
-              "text": "Exact card text",
+              "text": "First formal sentence. Second formal sentence.",
               "presentation": {
-                "chunks": [{"text": "Phrase", "style": "core"}],
-                "spine": ["actor", "judgment", "object"],
-                "buildSteps": ["Simple safe sentence.", "Exact card text"]
+                "chunks": [
+                  {"text": "First formal sentence.", "style": "core"},
+                  {"text": "Second formal sentence.", "style": "core"}
+                ]
               }
             }
           ],
-          "learningNotes": "## Heading\\n- Concise point"
+          "wordStudy": {
+            "entry": "errant",
+            "phoneticUS": "/əˈrɛnt/",
+            "category": "word",
+            "phraseParts": [],
+            "partOfSpeech": ["adjective — 偏离规范的"],
+            "meanings": ["偏离正常、规范或预期的"],
+            "wordForms": ["err — 犯错", "error — 错误"],
+            "tensePatterns": [],
+            "collocations": ["errant behavior — 失当行为"],
+            "examples": [{"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}],
+            "usageNotes": ["比 wrong 更正式。"]
+          },
+          "learningNotes": "## 语法拆分\\n- Grammar point\\n\\n## 关键词\\n- Keyword point"
         }
         \(CoachProviderContract.appDataEnd)
 

@@ -37,6 +37,7 @@ enum CoachSelfTest {
         <<<ENGLISH_COACH_APP_DATA>>>
         {
           "mode": "improve",
+          "optimizedChinese": "",
           "cards": [
             {
               "id": "concise",
@@ -48,9 +49,7 @@ enum CoachSelfTest {
                   {"text": "I’ll", "style": "core"},
                   {"text": "get back", "style": "predicate"},
                   {"text": "to you later.", "style": "modifier"}
-                ],
-                "spine": ["I", "get back", "to you"],
-                "buildSteps": ["I’ll get back to you.", "I’ll get back to you later."]
+                ]
               }
             },
             {
@@ -63,13 +62,11 @@ enum CoachSelfTest {
                   {"text": "I", "style": "core"},
                   {"text": "will review", "style": "predicate"},
                   {"text": "this and respond later today.", "style": "core"}
-                ],
-                "spine": ["I", "review", "respond"],
-                "buildSteps": ["I will respond.", "I will review this and respond later today."]
+                ]
               }
             }
           ],
-          "learningNotes": "## 原句判断\\n- 语法需要修改。\\n\\n## 可复用结构\\n- `get back to someone`"
+          "learningNotes": "## 语法拆分\\n- 语法需要修改。\\n\\n## 关键词\\n- `get back to someone`"
         }
         <<<END_ENGLISH_COACH_APP_DATA>>>
         """
@@ -79,9 +76,59 @@ enum CoachSelfTest {
             parsedStructured.mode == .improve,
             parsedStructured.cards.count == 2,
             parsedStructured.cards[0].presentation?.chunks[1].style == .predicate,
-            parsedStructured.cards[0].presentation?.buildSteps.count == 2,
-            parsedStructured.notes.contains("原句判断"),
+            parsedStructured.cards[0].presentation?.chunks.count == 3,
+            parsedStructured.optimizedChinese == nil,
+            parsedStructured.notes.contains("语法拆分"),
+            parsedStructured.notes.contains("关键词"),
             !parsedStructured.notes.contains("ENGLISH_COACH_APP_DATA")
+        ]
+
+        let expressSample = """
+        <<<ENGLISH_COACH_APP_DATA>>>
+        {
+          "mode": "express",
+          "optimizedChinese": "如果预算明天仍未获批，请先准备材料，不要承诺启动日期。",
+          "cards": [
+            {
+              "id": "concise",
+              "title": "ignored",
+              "subtitle": "ignored",
+              "text": "If the budget still isn't approved tomorrow, please prepare the materials but don't commit to a start date.",
+              "presentation": {
+                "chunks": [
+                  {"text": "If the budget still isn't approved tomorrow,", "style": "protected"},
+                  {"text": "please prepare the materials", "style": "predicate"},
+                  {"text": "but don't commit to a start date.", "style": "protected"}
+                ]
+              }
+            },
+            {
+              "id": "formal",
+              "title": "ignored",
+              "subtitle": "ignored",
+              "text": "If the budget remains unapproved tomorrow, please prepare the materials but do not commit to a commencement date.",
+              "presentation": {
+                "chunks": [
+                  {"text": "If the budget remains unapproved tomorrow,", "style": "protected"},
+                  {"text": "please prepare the materials", "style": "predicate"},
+                  {"text": "but do not commit to a commencement date.", "style": "protected"}
+                ]
+              }
+            }
+          ],
+          "learningNotes": "## 语法拆分\\n- 条件从句 + 主句。\\n\\n## 关键词\\n- `commit to` 表示作出承诺。"
+        }
+        <<<END_ENGLISH_COACH_APP_DATA>>>
+        """
+        let parsedExpress = CoachOutputParser.parse(expressSample)
+        let expressChecks = [
+            parsedExpress.mode == .express,
+            parsedExpress.optimizedChinese == "如果预算明天仍未获批，请先准备材料，不要承诺启动日期。",
+            parsedExpress.cards.count == 2,
+            parsedExpress.cards[0].title == "极简／口语",
+            parsedExpress.cards[1].title == "官方／书面",
+            parsedExpress.notes.contains("语法拆分"),
+            parsedExpress.notes.contains("关键词")
         ]
 
         let understandSample = """
@@ -95,9 +142,7 @@ enum CoachSelfTest {
               "subtitle": "ignored",
               "text": "The board needs verification before approval.",
               "presentation": {
-                "chunks": [{"text": "The board needs verification before approval.", "style": "core"}],
-                "spine": ["board", "needs verification", "before approval"],
-                "buildSteps": ["The board needs verification."]
+                "chunks": [{"text": "The board needs verification before approval.", "style": "core"}]
               }
             },
             {
@@ -111,13 +156,11 @@ enum CoachSelfTest {
                   {"text": "the board", "style": "core"},
                   {"text": "could not approve", "style": "protected"},
                   {"text": "it until the assumptions had been verified.", "style": "protected"}
-                ],
-                "spine": ["board", "could not approve", "until verified"],
-                "buildSteps": ["The board could not approve it."]
+                ]
               }
             }
           ],
-          "learningNotes": "## 句子意思\\n- 批准以核验为前提。"
+          "learningNotes": "## 语法拆分\\n- 批准以核验为前提。\\n\\n## 关键词\\n- `until` 引导时间条件。"
         }
         <<<END_ENGLISH_COACH_APP_DATA>>>
         """
@@ -125,8 +168,7 @@ enum CoachSelfTest {
         let understandChecks = [
             parsedUnderstand.cards[0].title == "简明意思",
             parsedUnderstand.cards[1].title == "原句拆分",
-            parsedUnderstand.cards[1].presentation?.buildSteps.last
-                == parsedUnderstand.cards[1].text
+            parsedUnderstand.cards[1].presentation?.chunks.count == 4
         ]
 
         let wordSample = """
@@ -138,6 +180,42 @@ enum CoachSelfTest {
         let wordChecks = [
             !parsedWord.hasToneCards,
             parsedWord.notes == wordSample
+        ]
+
+        let structuredWordSample = """
+        <<<ENGLISH_COACH_APP_DATA>>>
+        {
+          "mode": "word",
+          "cards": [],
+          "wordStudy": {
+            "entry": "errant",
+            "phoneticUS": "/əˈrɛnt/",
+            "category": "word",
+            "phraseParts": [],
+            "partOfSpeech": ["adjective — 偏离规范的"],
+            "meanings": ["偏离正常、规范或预期的"],
+            "wordForms": ["err — 犯错", "error — 错误"],
+            "tensePatterns": [],
+            "collocations": ["errant behavior — 失当行为"],
+            "examples": [
+              {"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}
+            ],
+            "usageNotes": ["比 wrong 更正式。"]
+          },
+          "learningNotes": "## 补充说明\\n- 这里是补充提示。"
+        }
+        <<<END_MARKER>>>
+        """
+        let parsedStructuredWord = CoachOutputParser.parse(structuredWordSample)
+        let structuredWordChecks = [
+            parsedStructuredWord.mode == .word,
+            parsedStructuredWord.wordStudy?.entry == "errant",
+            parsedStructuredWord.wordStudy?.phoneticUS == "/əˈrɛnt/",
+            parsedStructuredWord.wordStudy?.tensePatterns?.isEmpty == true,
+            parsedStructuredWord.wordStudy?.examples?.count == 1,
+            parsedStructuredWord.notes.contains("补充提示"),
+            !parsedStructuredWord.notes.contains("ENGLISH_COACH_APP_DATA"),
+            !parsedStructuredWord.notes.contains("END_MARKER")
         ]
 
         let learningNotes = """
@@ -190,6 +268,13 @@ enum CoachSelfTest {
         )
         try? FileManager.default.removeItem(at: configurationURL)
 
+        let missingConfigurationURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("english-coach-missing-\(UUID().uuidString).json")
+        let defaultProvider = CoachProviderFactory.make(
+            environment: [:],
+            configurationURL: missingConfigurationURL
+        )
+
         let adapterSemaphore = DispatchSemaphore(value: 0)
         var echoedRequest: ExternalCoachRequest?
         let adapterProvider = ExternalCommandCoachProvider(
@@ -212,16 +297,42 @@ enum CoachSelfTest {
             providerPrompt.contains("Keep this exact."),
             providerPrompt.contains(CoachProviderContract.appDataStart),
             providerPrompt.contains(CoachProviderContract.appDataEnd),
+            providerPrompt.contains("## 语法拆分"),
+            providerPrompt.contains("## 关键词"),
+            providerPrompt.contains("first produce optimizedChinese"),
+            providerPrompt.contains("interpersonal tone"),
+            providerPrompt.contains("\"optimizedChinese\""),
+            providerPrompt.contains("Do not include logic"),
+            providerPrompt.contains("Concision may reduce words, never facts."),
+            !providerPrompt.localizedCaseInsensitiveContains("logic spine"),
+            !providerPrompt.localizedCaseInsensitiveContains("build steps"),
+            !providerPrompt.contains("\"sentences\""),
             decodedRequest == providerRequest,
             configuredProvider.displayName == "Test Provider",
+            defaultProvider.displayName == "Sol · Low",
             adapterFinished,
             echoedRequest?.expression == "Adapter test.",
             echoedRequest?.promptVersion == CoachProviderContract.promptVersion
         ]
 
+        let windowChecks = [
+            CoachWindowPolicy.collectionBehavior.contains(.managed),
+            !CoachWindowPolicy.collectionBehavior.contains(.canJoinAllSpaces),
+            !CoachWindowPolicy.collectionBehavior.contains(.moveToActiveSpace),
+            !CoachWindowPolicy.frameAutosaveName.isEmpty
+        ]
+
+        let keyboardChecks = [
+            !CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [], hasMarkedText: false),
+            CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [.command], hasMarkedText: false),
+            !CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [], hasMarkedText: true),
+            !CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [.command], hasMarkedText: true)
+        ]
+
         let passed = (
-            sentenceChecks + structuredChecks + understandChecks + wordChecks + noteChecks
-                + providerChecks
+            sentenceChecks + structuredChecks + expressChecks + understandChecks + wordChecks
+                + structuredWordChecks + noteChecks
+                + providerChecks + windowChecks + keyboardChecks
         )
             .allSatisfy { $0 }
         print(passed ? "SELF_TEST_PASS" : "SELF_TEST_FAIL")

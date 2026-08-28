@@ -15,7 +15,7 @@ Codex example:
 ```json
 {
   "provider": "codex",
-  "model": "gpt-5.6-luna",
+  "model": "gpt-5.6-sol",
   "reasoningEffort": "low"
 }
 ```
@@ -49,7 +49,7 @@ standard input:
 ```json
 {
   "schemaVersion": 1,
-  "promptVersion": "2026-08-13.v1",
+  "promptVersion": "2026-08-25.v4",
   "expression": "the user's exact input",
   "prompt": "the complete provider-neutral coaching prompt",
   "model": "optional model identifier"
@@ -71,8 +71,38 @@ The raw response must contain the version-1 data block requested by the prompt:
 <<<END_ENGLISH_COACH_APP_DATA>>>
 ```
 
-The app validates and normalizes the cards before rendering. Copy always uses the
-clean `text` field rather than visual chunks.
+The app validates and normalizes the cards before rendering. Each sentence card's
+`presentation` contains phrase-level `chunks` that reconstruct the complete card
+text in order. Copy always uses the clean `text` field rather than visual chunks.
+For `express` mode, the optional `optimizedChinese` response field contains the
+complete revised Chinese wording that both English cards translate. It must retain
+all material information and the source's interpersonal tone. For other modes,
+return an empty string or omit the field.
+
+For `word` mode, return an empty `cards` array and a `wordStudy` object. The app
+uses it to render the vocabulary learning view:
+
+```json
+{
+  "entry": "errant",
+  "phoneticUS": "/əˈrɛnt/",
+  "category": "word",
+  "phraseParts": [],
+  "partOfSpeech": ["adjective — 偏离正确路径或规范的"],
+  "meanings": ["偏离正常、规范或预期的"],
+  "wordForms": ["err — 犯错", "error — 错误", "erroneous — 错误的"],
+  "tensePatterns": [],
+  "collocations": ["errant behavior — 失当行为"],
+  "examples": [
+    {"english": "The system detected an errant data entry.", "chinese": "系统发现了一项错误的数据录入。"}
+  ],
+  "usageNotes": ["比 wrong 更正式，常带有偏离规范或轨道的意味。"]
+}
+```
+
+`phoneticUS` must use American English IPA. `tensePatterns` is only for verbs
+or verb phrases; do not manufacture tense information for nouns, adjectives, or
+fixed phrases.
 
 ## Native Swift provider
 

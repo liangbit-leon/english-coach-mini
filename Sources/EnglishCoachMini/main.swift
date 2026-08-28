@@ -122,6 +122,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+enum CoachWindowPolicy {
+    static let collectionBehavior: NSWindow.CollectionBehavior = [.managed]
+    static let frameAutosaveName = "EnglishCoachMini.CoachPanel"
+}
+
+enum CoachKeyboardPolicy {
+    static func shouldAnalyzeReturn(
+        modifiers: NSEvent.ModifierFlags,
+        hasMarkedText: Bool
+    ) -> Bool {
+        !hasMarkedText && modifiers.contains(.command)
+    }
+}
+
 @MainActor
 final class CoachPanelController {
     private let store = CoachStore()
@@ -145,8 +159,12 @@ final class CoachPanelController {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.minSize = NSSize(width: 620, height: 520)
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.collectionBehavior = CoachWindowPolicy.collectionBehavior
         panel.backgroundColor = .windowBackgroundColor
+
+        let restoredFrame = panel.setFrameUsingName(CoachWindowPolicy.frameAutosaveName)
+        _ = panel.setFrameAutosaveName(CoachWindowPolicy.frameAutosaveName)
+        hasPositionedWindow = restoredFrame
 
         let rootView = CoachView(store: store) { [weak panel] in
             panel?.orderOut(nil)
@@ -161,18 +179,18 @@ final class CoachPanelController {
             }
 
             let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let editor = self.panel.firstResponder as? NSTextView
 
-            if modifiers.contains(.command) {
+            if CoachKeyboardPolicy.shouldAnalyzeReturn(
+                modifiers: modifiers,
+                hasMarkedText: editor?.hasMarkedText() ?? false
+            ) {
                 self.store.analyze()
                 return nil
             }
 
-            if modifiers.isDisjoint(with: [.control, .option]),
-               let editor = self.panel.firstResponder as? NSTextView {
-                editor.insertNewline(nil)
-                return nil
-            }
-
+            // Let NSTextView and its input context commit marked IME text or insert
+            // a normal newline. Calling insertNewline directly here discards marked text.
             return event
         }
     }
