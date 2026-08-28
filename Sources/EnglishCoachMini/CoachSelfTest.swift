@@ -322,10 +322,17 @@ enum CoachSelfTest {
             !CoachWindowPolicy.frameAutosaveName.isEmpty
         ]
 
+        let keyboardChecks = [
+            !CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [], hasMarkedText: false),
+            CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [.command], hasMarkedText: false),
+            !CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [], hasMarkedText: true),
+            !CoachKeyboardPolicy.shouldAnalyzeReturn(modifiers: [.command], hasMarkedText: true)
+        ]
+
         let passed = (
             sentenceChecks + structuredChecks + expressChecks + understandChecks + wordChecks
                 + structuredWordChecks + noteChecks
-                + providerChecks + windowChecks
+                + providerChecks + windowChecks + keyboardChecks
         )
             .allSatisfy { $0 }
         print(passed ? "SELF_TEST_PASS" : "SELF_TEST_FAIL")

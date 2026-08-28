@@ -127,6 +127,15 @@ enum CoachWindowPolicy {
     static let frameAutosaveName = "EnglishCoachMini.CoachPanel"
 }
 
+enum CoachKeyboardPolicy {
+    static func shouldAnalyzeReturn(
+        modifiers: NSEvent.ModifierFlags,
+        hasMarkedText: Bool
+    ) -> Bool {
+        !hasMarkedText && modifiers.contains(.command)
+    }
+}
+
 @MainActor
 final class CoachPanelController {
     private let store = CoachStore()
@@ -170,18 +179,18 @@ final class CoachPanelController {
             }
 
             let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let editor = self.panel.firstResponder as? NSTextView
 
-            if modifiers.contains(.command) {
+            if CoachKeyboardPolicy.shouldAnalyzeReturn(
+                modifiers: modifiers,
+                hasMarkedText: editor?.hasMarkedText() ?? false
+            ) {
                 self.store.analyze()
                 return nil
             }
 
-            if modifiers.isDisjoint(with: [.control, .option]),
-               let editor = self.panel.firstResponder as? NSTextView {
-                editor.insertNewline(nil)
-                return nil
-            }
-
+            // Let NSTextView and its input context commit marked IME text or insert
+            // a normal newline. Calling insertNewline directly here discards marked text.
             return event
         }
     }
